@@ -17,8 +17,9 @@ public class CodeBook {
 
   String filename;
 
-  public static ArrayList hosts = new ArrayList();
-  public static Thread[] servers;
+  private static ArrayList<String> hosts = new ArrayList<String>();
+  private static Thread[] servers;
+  private static int[] encoding;
   
   public CodeBook(){}
 
@@ -61,7 +62,7 @@ public class CodeBook {
 
   public int[] encodeImage(BufferedImage orgImage, int subImageWidth, int subImageHeight) {
     double minDistance = Double.MAX_VALUE, start, duration = 0.0;
-    int[] encoding;
+    //int[] encoding;
     int bestMatch = 0, index = 0, count = 0, numSubImages, imageHeight, imageWidth;
     BufferedImage subimage;
     
@@ -72,6 +73,114 @@ public class CodeBook {
     
     
 
+
+
+
+
+
+
+
+
+    System.out.println("Loading hosts.txt...");
+
+    readHosts("hosts.txt");
+    int serverCount = hosts.size();
+    servers = new Thread[serverCount];
+    Registry[] registries = new Registry[serverCount];
+    Compare[] stubs = new Compare[serverCount];
+
+
+    System.out.println("Connecting to servers...");
+
+    for (int i = 0; i < serverCount; i ++) {
+      try {
+        registries[i] = LocateRegistry.getRegistry((String)hosts.get(i));
+        stubs[i] = (Compare) registries[i].lookup("Compare" + (filename.split("\\."))[0]);
+      } catch (Exception e) {
+        System.err.println("Client exception while locating server: " + e.toString());
+        System.exit(1);
+      }
+    }
+
+
+    System.out.println("Initializing threads...");
+
+    for (int i = 0; i < serverCount; i++) 
+      servers[i] = new Thread();
+
+
+
+
+
+
+    System.out.println("Comparing image");
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    byte[] imageAsBytes = null;
+
+    for(int y = 0; y < imageHeight; y+= subImageHeight) {
+      for(int x = 0; x < imageWidth; x+= subImageWidth) {
+        subimage = orgImage.getSubimage(x, y, subImageWidth, subImageHeight);
+        start = new Date().getTime();
+        //bestMatch = compareBox(subimage, 2.0 /*Double.MAX_VALUE*/);
+        try {
+          baos = new ByteArrayOutputStream();
+          ImageIO.write(subimage, "png", baos);
+          baos.flush();
+          imageAsBytes = baos.toByteArray();
+          baos.close();
+        } catch (Exception e) {
+          System.err.println("Client Exception: " + e.toString());
+          e.printStackTrace();
+        }
+
+
+
+
+
+        int j = 0;
+        for (j = 0; j < serverCount; j++) {
+          if (!servers[j].isAlive()) {
+            break;
+          }
+        }
+        servers[j] = new Thread(new ConnectionToServer(imageAsBytes, 2.0, stubs[j], this, x, y, imageWidth, subImageWidth, subImageHeight));
+        servers[j].start();
+        while(!availableServer()) {
+          try{
+            Thread.sleep(1000);
+          } catch (Exception e) {
+            System.err.println("Client error while sleeping: " + e.toString());
+            System.err.println("Continuing execution...");
+          }
+        }
+
+
+//        bestMatch = stub.compareBox(imageAsBytes, 2.0);
+
+
+        duration += new Date().getTime() - start;
+//        encoding[index++] = bestMatch;
+        count++;
+        if (count%128==0) {
+          System.out.println("Encoded subimage "+count+" of "+numCodeWords);
+          System.out.println("Average time to execute compareBox(): " + duration/128.0 + "ms");
+          duration = 0.0;
+        }
+      }
+    }
+
+
+
+
+
+
+
+
+
+
+
+/* Old Method
     Compare stub = null;
     try {
       Registry registry = LocateRegistry.getRegistry(null);
@@ -82,15 +191,11 @@ public class CodeBook {
     }
       
 
-
-
-
-
     for(int y = 0; y < imageHeight; y+= subImageHeight) {
       for(int x = 0; x < imageWidth; x+= subImageWidth) {
         subimage = orgImage.getSubimage(x, y, subImageWidth, subImageHeight);
         start = new Date().getTime();
-        //bestMatch = compareBox(subimage, 2.0 /*Double.MAX_VALUE*/);
+        //bestMatch = compareBox(subimage, 2.0 );
 
         
         try {
@@ -118,6 +223,8 @@ public class CodeBook {
         }
       }
     }
+*/
+
     try {
       BufferedWriter out = new BufferedWriter(new FileWriter("encoding.txt"));
       for(int i = 0; i < numCodeWords; i++) {
@@ -168,6 +275,39 @@ public class CodeBook {
       }
     }
     return bestMatch;
+  }
+
+  private static boolean availableServer() {
+    for (int i = 0; i < hosts.size(); i++) 
+      if (!servers[i].isAlive())
+        return true;
+    return false;
+  }
+
+  private void readHosts(String filename) {
+    try{
+      // Open the file that is the first 
+      // command line parameter
+      FileInputStream fstream = new FileInputStream(filename);
+      // Get the object of DataInputStream
+      DataInputStream in = new DataInputStream(fstream);
+      BufferedReader br = new BufferedReader(new InputStreamReader(in));
+      String strLine;
+      //Read File Line By Line
+      while ((strLine = br.readLine()) != null)   {
+        // Print the content on the console
+        System.out.println (strLine);
+        hosts.add(new String(strLine));
+      }
+      //Close the input stream
+      in.close();
+    }catch (Exception e){//Catch exception if any
+      System.err.println("Error: " + e.getMessage());
+    }
+  }
+
+  public void setEncoded(int i, int val) {
+    encoding[i] = val;
   }
 }
 

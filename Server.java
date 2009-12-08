@@ -82,21 +82,21 @@ public class Server implements Compare {
 
   public static void main(String args[]) {
 	
-	try {
-      String filename = (args.length < 1) ? "Baboon.bmp" : args[0];
-	    Server obj = new Server( filename , (args.length < 2) ? 8 : Integer.parseInt(args[1]) , (args.length < 3) ? 8 : Integer.parseInt(args[2]) );
-	    Compare stub = (Compare) UnicastRemoteObject.exportObject(obj, 0);
+    try {
+        String filename = (args.length < 1) ? "Baboon.bmp" : args[0];
+        Server obj = new Server(filename, (args.length < 2) ? 8 : Integer.parseInt(args[1]), (args.length < 3) ? 8 : Integer.parseInt(args[2]));
+        Compare stub = (Compare) UnicastRemoteObject.exportObject(obj, 0);
 
-	    // Bind the remote object's stub in the registry
-	    Registry registry = LocateRegistry.getRegistry();
-      System.out.println("Registering as \"Compare" + (filename.split("\\."))[0]"\"...");
-	    registry.bind("Compare" + (filename.split("\\."))[0], stub);
+        // Bind the remote object's stub in the registry
+        Registry registry = LocateRegistry.getRegistry();
+        System.out.println("Registering as \"Compare" + (filename.split("\\."))[0] + "\"...");
+        registry.bind("Compare" + (filename.split("\\."))[0], stub);
 
-	    System.err.println("Server ready");
-	} catch (Exception e) {
-	    System.err.println("Server exception: " + e.toString());
-	    e.printStackTrace();
-	}
+        System.err.println("Server ready");
+    } catch (Exception e) {
+        System.err.println("Server exception: " + e.toString());
+        e.printStackTrace();
     }
+  }
 }
 
