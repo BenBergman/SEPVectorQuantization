@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<drjava version="drjava-20090821-r5004">
+  <project autorefresh="false" root="" work="">
+    <createjar file=""/>
+    <source>
+      <file active="true" name="CodeBook.java" package="" timestamp="21-Nov-2009 14:02:20">
+        <select from="1988" to="1978"/>
+        <scroll column="1041" row="0"/>
+      </file>
+      <file name="VectorQuantization.java" package="" timestamp="21-Nov-2009 14:00:49">
+        <select from="1988" to="1978"/>
+        <scroll column="1041" row="0"/>
+      </file>
+    </source>
+    <included/>
+    <excluded/>
+    <collapsed/>
+    <classpath/>
+    <breakpoints/>
+    <watches/>
+    <bookmarks/>
+  </project>
+</drjava>
