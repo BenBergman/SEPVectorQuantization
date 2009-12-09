@@ -148,7 +148,7 @@ public class CodeBook {
         servers[j].start();
         while(!availableServer()) {
           try{
-            Thread.sleep(1000);
+            //Thread.sleep(1000);
           } catch (Exception e) {
             System.err.println("Client error while sleeping: " + e.toString());
             System.err.println("Continuing execution...");
